@@ -7,10 +7,6 @@ android {
     namespace = "com.example.androidassist"
     compileSdk = 34
 
-    buildFeatures {
-        viewBinding = true
-    }
-
     defaultConfig {
         applicationId = "com.example.androidassist"
         minSdk = 26

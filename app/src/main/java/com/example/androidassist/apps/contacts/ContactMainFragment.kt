@@ -1,30 +1,22 @@
 package com.example.androidassist.apps.contacts
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.example.androidassist.R
-import com.example.androidassist.databinding.ContactsMainBinding
 import android.provider.ContactsContract
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-
-
-/**
- * A simple [Fragment] subclass.
- * Use the [ContactMainFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class ContactMainFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private lateinit var binding: ContactsMainBinding
     private lateinit var contactList: RecyclerView
     private lateinit var contacts: MutableList<ContactDTO>
-    private lateinit var contactAdapter: ContactAdapter
+    private var contactAdapter: ContactAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,18 +28,31 @@ class ContactMainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        contactList = requireView().findViewById(R.id.contact_list)
-        contacts = loadContacts()
 
-        contactAdapter = ContactAdapter(contacts, activity as ContactsMainActivity)
-        contactList.adapter = contactAdapter
+        if (allPermissionsGranted()) {
+            contacts = loadContacts()
+            contactList = requireView().findViewById(R.id.contact_list)
+
+            contactAdapter = ContactAdapter(contacts)
+            contactList.adapter = contactAdapter
+            contactList.layoutManager = LinearLayoutManager(activity)
+        } else {
+            requestCameraPermissions()
+        }
     }
+
     companion object {
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance() = ContactMainFragment()
-
+        private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.READ_CONTACTS)
     }
+
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestCameraPermissions() {
+        ActivityCompat.requestPermissions(requireActivity(), REQUIRED_PERMISSIONS, 123)
+    }
+
     private fun loadContacts() : MutableList<ContactDTO> {
         val contactList: MutableList<ContactDTO> = ArrayList()
         val contacts = (activity?.contentResolver)?.query(
